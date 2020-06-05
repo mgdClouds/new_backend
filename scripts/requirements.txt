@@ -73,7 +73,7 @@ tabulate==0.8.2
 text-unidecode==1.2
 traitlets==4.3.2
 tzlocal==1.5.1
-urllib3==1.24.1
+urllib3==1.24.2
 Wand==0.5.1
 wcwidth==0.1.7
 Werkzeug==0.14.1
