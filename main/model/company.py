@@ -1362,15 +1362,18 @@ class Offer(Base):
     items = []
     o_id = kwargs.get('id')
     offer = self.query.filter_by(id=o_id).first()
-
+    print(222,self,offer)
     data = []
     offer_data = OfferData.query.filter_by(offer_id=offer.id).all()
+    print(333,OfferData, offer_data)
     i = 1
     for od_item in offer_data:
       person_data = {}
       engineer = Engineer.query.filter_by(id=od_item.engineer_id).first()
+      print(444,Engineer, engineer, od_item.engineer_id)
       if engineer is not None:
         career = Career.query.filter_by(id=engineer.now_career_id).first()
+        print(555,Career,career,career.real_name)
         if career is not None and career.real_name is not None:
           person_data['email'] = engineer.email
           person_data['living_address'] = engineer.living_address
@@ -1384,7 +1387,10 @@ class Offer(Base):
           person_data['gender'] = engineer.gender
           person_data['id_card'] = engineer.id_card
           person_data['work_company'] = engineer.work_company
-          # person_data['salery'] = engineer.s_money
+          if engineer.s_money is not None:
+            person_data['salery'] = engineer.s_money
+          else:
+            person_data['salery'] = ''
           person_data['expect_salary'] = engineer.expect_salary
           person_data['age'] = engineer.age
           person_data['race'] = engineer.race
@@ -1400,9 +1406,9 @@ class Offer(Base):
 
 #-------------PART I COMPLETED ---------------------
 
-
           person_data['name'] = engineer.real_name
           writteninterviewinfo = WrittenInterviewInfo.query.filter_by(engineer_id=engineer.id).first()
+          print(666,engineer.id)
           if writteninterviewinfo is not None:
             person_data['single_choice_score'] = writteninterviewinfo.single_choice_score
             person_data['written_rank'] = writteninterviewinfo.written_rank
@@ -1517,9 +1523,7 @@ class Offer(Base):
             person_data['education_degree'] = ''
             person_data['education_school'] = ''
             person_data['edu_recruit'] = ''
-
             person_data['edu_college_type'] = ''
-          
 
 #-------------PART III COMPLETED ---------------------
 
@@ -1632,7 +1636,11 @@ class Offer(Base):
 #-------------PART VII COMPLETED ---------------------        
 
           person_data['work_location'] = engineer.career[0].work_place
-          person_data['education'] = engineer.s_education
+          print('engineer.s_education: ', engineer.s_education)
+          if engineer.s_education is not None:
+            person_data['education'] = engineer.s_education
+          else:
+            person_data['education'] = ''
 
           person_data['work_position'] = engineer.work_position
           person_data['work_location'] = engineer.work_location

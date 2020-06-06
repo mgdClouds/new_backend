@@ -43,7 +43,6 @@ class AliOss(object):
     def _download(self, name, file_path):
         self.bucket.get_object_to_file(name, file_path)
 
-
 class EntryFileTemplate(AliOss):
     def __init__(self, app):
         super().__init__()
@@ -81,10 +80,13 @@ class EntryFileTemplate(AliOss):
 
     @api_response
     def upload(self):
+    
       if current_user.role not in (Roles.company_om, Roles.purchase):
           raise NewComException("无权进行此操作", 500)
-      tem_filename, path = simple_upload("entry_file_template")
+    
+      tem_filename, path, cv_name = simple_upload("entry_file_template")
       entry_file_template = ".".join(tem_filename.split(".")[1:])
+      print('self: ', self)
       self._upload(
         self._object_name(current_user.company_id, entry_file_template), path
       )
@@ -92,21 +94,25 @@ class EntryFileTemplate(AliOss):
       mode = request.headers['MODE']
       offerID = request.headers['OFFERID']
 
+      print('mode: ', mode)
+      print('offerID: ', offerID)
+      print('current_user.company_id: ', current_user.company_id)
+
       if mode != 'resume':
         c = Company.query.get(current_user.company_id)
         c.update(entry_file_template=entry_file_template)
       else:
-        result = self.getAnalysisVia3Party(path, offerID)
-
+        result = self.getAnalysisVia3Party(path, cv_name, offerID)
+        
       return jsonify({ 'result': result})
 
-
-    def getAnalysisVia3Party(self, filename, offerID):
+    def getAnalysisVia3Party(self, filename, cv_name, offerID):
       url = 'http://www.resumesdk.com/api/parse'
       uid = 2005091   # 替换为你的用户名（int格式）
       pwd = 'NknGoM'  # 替换为你的密码（str格式）
 
       # 读取文件内容，构造请求
+      print('115  :cv_name: ', cv_name)
       cont = open(filename, 'rb').read()
       base_cont = base64.b64encode(cont)
       base_cont = base_cont.decode('utf-8') if sys.version.startswith('3') else base_cont     #兼容python2与python3
@@ -121,14 +127,15 @@ class EntryFileTemplate(AliOss):
       
       # 解析结果
       res_js = json.loads(res.text)
-      print('result:\n%s\n'%(json.dumps(res_js, indent=2, ensure_ascii=False)))
+    #   print('result:\n%s\n'%(json.dumps(res_js, indent=2, ensure_ascii=False)))
       
-      if 'result' in res_js:
-          print('name: %s'%(res_js['result'].get('name', 'None')))
+    #   if 'result' in res_js:
+    #       print('name: %s'%(res_js['result'].get('name', 'None')))
 
       # putting analysis result to db
       engineer = res_js['result']
       engineer['offerID'] = offerID
+      engineer['cv_name'] = cv_name
       offer_result = Engineer.post_from_cv(**dict(engineer))
       return offer_result
 
@@ -208,8 +215,8 @@ class EntryFile(EntryFileTemplate):
         if not current_user.role == Roles.engineer:
             raise NewComException("无权进行此操作", 500)
         tem_filename, path = upload_file("entry_files")
-
-        
+        print(111,tem_filename)
+        print(222,path)        
 
         e = Engineer.query.get(current_user.id)
         image_count = self.turn_pdf2img(e, path)

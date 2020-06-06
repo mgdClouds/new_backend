@@ -65,14 +65,16 @@ def simple_upload(input_name):
         raise NewComException("bad file type", 500)
     if tail_name in ["doc", "docx"]:
         filename = f.filename.replace(",", "，")
-        tem_word_path = os.path.join(tem_path, "{}.{}".format(str(uuid1()), filename))
+        # tem_word_path = os.path.join(tem_path, "{}.{}".format(str(uuid1()), filename))
+        tem_word_path = os.path.join(tem_path, filename)
         f.save(tem_word_path)
-        return tem_word_path.split("/")[-1], tem_word_path
+        return tem_word_path.split("/")[-1], tem_word_path, f.filename
     else:
-        tem_filename = "%s.%s" % (str(uuid1()), f.filename)
+        # tem_filename = "%s.%s" % (str(uuid1()), f.filename)
+        tem_filename = f.filename
         path = os.path.join(tem_path, tem_filename)
         f.save(path)
-        return tem_filename, path
+        return tem_filename, path, f.filename
 
 
 @api_response

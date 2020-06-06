@@ -415,20 +415,28 @@ class Engineer(User):
   @classmethod
   def post_from_cv(cls, **kwargs):
 
+    #   print(888,cls)
+    #   print(999,kwargs)
+      print(777, kwargs.get('cv_name'))
+      print(888, kwargs.get('username'))
+      print(999,kwargs.get('pre_username'))
       offerID = kwargs.get('offerID')
+      model = cls()
+
 
       emailOfPost = ''
       if(kwargs.get('email')):
         emailOfPost = kwargs.get('email')
         oldModel = cls.query.filter_by(email=emailOfPost).first()
+        print('OldModel: ', oldModel)
 
         if oldModel is not None:
+          print('old model is not none')
           offerdata = {}
           offerdata['engineer_id'] = oldModel.id
           offerdata['offer_id'] = offerID
           return offerdata
-
-      model = cls()
+     
       created_date = get_today()
       from main.api.admin import _create_engineer_pre_username
       model.pre_username = _create_engineer_pre_username()
@@ -459,7 +467,9 @@ class Engineer(User):
         model.hukou_address = kwargs.get('hukou_address_norm')
       if(kwargs.get('work_company')):
         model.work_company = kwargs.get('work_company')
-
+      if(kwargs.get('cv_name')):
+          model.cv_name = kwargs.get('cv_name')
+          print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
       model.save()
 
       # education
