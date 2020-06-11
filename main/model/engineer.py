@@ -16,6 +16,7 @@ from .user import User, Roles
 from ._base import Base, OfferShutDownReason, OfferStatus, PostSchema, BaseStatus
 from ..schema.base import BasePutSchema, BaseActionSchema
 from ..extention import db
+# from .company import OfferData
 from ..util.work_dates import month_first_end_date, get_today, workdays_between, get_last_year_month, is_work_day, \
     int_year_month, month_work_days, months_later, change_datetime_date, is_holiday, days_num_between, days_between, \
     str_to_date
@@ -416,25 +417,39 @@ class Engineer(User):
   def post_from_cv(cls, **kwargs):
 
     #   print(888,cls)
-    #   print(999,kwargs)
-      print(777, kwargs.get('cv_name'))
-      print(888, kwargs.get('username'))
-      print(999,kwargs.get('pre_username'))
+    #   print(666,kwargs)
+    #   print(777, kwargs.get('cv_name'))
+      print(888, kwargs.get('name'))
+      print(999,kwargs.get('email'))
+      print(999999,kwargs.get('college'))
       offerID = kwargs.get('offerID')
       model = cls()
+      writtenInterviewInfo = WrittenInterviewInfo()
+      print('cls : ', cls)
 
 
       emailOfPost = ''
       if(kwargs.get('email')):
         emailOfPost = kwargs.get('email')
+        print("cls in IF : ", cls)
         oldModel = cls.query.filter_by(email=emailOfPost).first()
-        print('OldModel: ', oldModel)
 
         if oldModel is not None:
           print('old model is not none')
+          print('OldModel: ', oldModel, oldModel.id)
           offerdata = {}
-          offerdata['engineer_id'] = oldModel.id
-          offerdata['offer_id'] = offerID
+        #   limit here!!!
+          duplicatedEngineers = writtenInterviewInfo.query.filter_by(engineer_id=oldModel.id, offer_id=offerID).all()
+          print("duplicated engineers : ", len(duplicatedEngineers))
+          if (len(duplicatedEngineers) > 0): 
+              offerdata['engineer_id'] = None
+              offerdata['offer_id'] = None
+          else:
+            offerdata['engineer_id'] = oldModel.id   
+            offerdata['offer_id'] = offerID
+            writtenInterviewInfo.engineer_id = oldModel.id
+            writtenInterviewInfo.offer_id = offerID
+            writtenInterviewInfo.save()
           return offerdata
      
       created_date = get_today()
@@ -468,20 +483,37 @@ class Engineer(User):
       if(kwargs.get('work_company')):
         model.work_company = kwargs.get('work_company')
       if(kwargs.get('cv_name')):
-          model.cv_name = kwargs.get('cv_name')
-          print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+          print(472, "cv_name: ", kwargs.get('cv_name'))
+          print(473, "name: ", kwargs.get('name'))
+          print(474, "college: ", kwargs.get('college'))
+          if ((kwargs.get('name') is not None) and (kwargs.get('college') is not None)):
+            print('476 : detailed cv_name')
+            model.cv_name = kwargs.get('cv_name') + " " + kwargs.get('name') + " " + kwargs.get('college')
+          else:
+            print('479 : simple cv_name')
+            model.cv_name = kwargs.get('cv_name') 
       model.save()
+
+      if (model.id is not None):
+        writtenInterviewInfo.engineer_id = model.id
+      if (offerID is not None):
+        writtenInterviewInfo.offer_id = offerID
+      writtenInterviewInfo.save()
 
       # education
       if kwargs.get('education_objs'):
         for education in kwargs.get('education_objs'):
+          print('481 : education: ',education)
           ed = Education()
           ed.engineer_id = model.id
+
+          print(485,' : start_date : ', education.get('start_date'))
 
           if education.get('start_date') is not None and len(education.get('start_date')) == 7:
             ed.start_date = dt.datetime.strptime(education.get('start_date') + '.01', '%Y.%m.%d').date()
           elif education.get('start_date') is not None:
             ed.start_date = dt.datetime.strptime(education.get('start_date'), '%Y.%m.%d').date()
+          print(491, ' : end_date : ', education.get('end_date'))
           
           if education.get('end_date') is not None and len(education.get('end_date')) == 7:
             ed.start_date = dt.datetime.strptime(education.get('end_date') + '.01', '%Y.%m.%d').date()
@@ -501,7 +533,8 @@ class Engineer(User):
           ed.degree_norm = education.get('edu_degree_norm')
 
           ed.save()
-      
+          print("|||||||||||||||||||||||||||||")
+
       # job_experience
       if kwargs.get('job_exp_objs'):
         for job_exp in kwargs.get('job_exp_objs'):
@@ -3456,3 +3489,4 @@ class Payment(Base):
 
         _create_excel(path, name)
         return url
+

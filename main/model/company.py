@@ -934,26 +934,27 @@ class Offer(Base):
     if 'mode' in kwargs.keys():
       if kwargs['mode'] == 'offerData':
         offerdata = OfferData()
-        offerdata.engineer_id = kwargs['engineer_id']
-        offerdata.offer_id = kwargs['offer_id']
-        offerdata.created = dt.datetime.now()
-        offerdata.save()
+        if (kwargs['engineer_id'] is not None and kwargs['offer_id'] is not None):
+          offerdata.engineer_id = kwargs['engineer_id']
+          offerdata.offer_id = kwargs['offer_id']
+          print("!!!!!!!!!",kwargs['engineer_id'], kwargs['offer_id'])
+          offerdata.created = dt.datetime.now()
+          offerdata.save()
 
-        today = dt.date.today().strftime('%Y-%m-%d')
-        offerscdData = OfferScheduleData.query.filter_by(offer_id=kwargs['offer_id'], date=today).first()
-        if offerscdData is not None:
-          offerscdData.resume_collection_num = offerscdData.resume_collection_num + 1
-          offerscdData.update()
-        else:
-          offerscdData = OfferScheduleData()
-          offerscdData.offer_id = kwargs['offer_id']
-          offerscdData.date = today
-          offerscdData.resume_collection_num = 1
-          offerscdData.written_pass_num = 0
-          offerscdData.interview_pass_num = 0
-          offerscdData.offer_pass_num = 0
-          offerscdData.save()
-
+          today = dt.date.today().strftime('%Y-%m-%d')
+          offerscdData = OfferScheduleData.query.filter_by(offer_id=kwargs['offer_id'], date=today).first()
+          if offerscdData is not None:
+            offerscdData.resume_collection_num = offerscdData.resume_collection_num + 1
+            offerscdData.update()
+          else:
+            offerscdData = OfferScheduleData()
+            offerscdData.offer_id = kwargs['offer_id']
+            offerscdData.date = today
+            offerscdData.resume_collection_num = 1
+            offerscdData.written_pass_num = 0
+            offerscdData.interview_pass_num = 0
+            offerscdData.offer_pass_num = 0
+            offerscdData.save()
       m = cls()
     else:
       if current_user.role in ['company_om', 'purchase']:
@@ -1361,19 +1362,23 @@ class Offer(Base):
   def get_offer_person_data(self, **kwargs):
     items = []
     o_id = kwargs.get('id')
+    print(111,o_id)
     offer = self.query.filter_by(id=o_id).first()
-    print(222,self,offer)
+    print(222,self,offer.id)
     data = []
     offer_data = OfferData.query.filter_by(offer_id=offer.id).all()
     print(333,OfferData, offer_data)
     i = 1
     for od_item in offer_data:
+      print("1372: ", len(offer_data))
       person_data = {}
+      person_data['recommend'] = od_item.nk_result
       engineer = Engineer.query.filter_by(id=od_item.engineer_id).first()
-      print(444,Engineer, engineer, od_item.engineer_id)
+      print(444,Engineer, engineer,od_item.offer_id, od_item.engineer_id)
       if engineer is not None:
         career = Career.query.filter_by(id=engineer.now_career_id).first()
-        print(555,Career,career,career.real_name)
+        # print(555,Career,career,career.real_name)
+        print(555, Career, career)
         if career is not None and career.real_name is not None:
           person_data['email'] = engineer.email
           person_data['living_address'] = engineer.living_address
@@ -1407,8 +1412,8 @@ class Offer(Base):
 #-------------PART I COMPLETED ---------------------
 
           person_data['name'] = engineer.real_name
-          writteninterviewinfo = WrittenInterviewInfo.query.filter_by(engineer_id=engineer.id).first()
-          print(666,engineer.id)
+          writteninterviewinfo = WrittenInterviewInfo.query.filter_by(engineer_id=engineer.id, offer_id=o_id).first()
+          print(666,engineer.id, o_id)
           if writteninterviewinfo is not None:
             person_data['single_choice_score'] = writteninterviewinfo.single_choice_score
             person_data['written_rank'] = writteninterviewinfo.written_rank
@@ -1609,6 +1614,7 @@ class Offer(Base):
             person_data['skill_name'] = ''
             person_data['skill_level'] = ''
             person_data['skill_time'] = ''
+
 #-------------PART VI COMPLETED ---------------------
 
           lang = Language.query.filter_by(engineer_id=engineer.id).first()
@@ -1688,6 +1694,8 @@ class Offer(Base):
           data.append(person_data)
           items.append(i)
           i = i + 1
+
+          print('1695: ', len(data))
       
     return items, data
 

@@ -526,6 +526,7 @@ class OfferModelApi(ModelApi):
         }
       )
     elif schema_type == "OfferPersonData":
+      print("aaa ",self.model_class)
       items, data = self.model_class.get_offer_person_data(**kwargs)
       statistics_data = self.model_class.get_statistics_modal_data(**kwargs)
       return jsonify(

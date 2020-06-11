@@ -99,8 +99,7 @@ def engineer_details():
     involve_engineer = Engineer.query.filter_by(id=engineer_id).first()
     involve_engineer_info = EngineerInfoSchema(many=False, unknown=EXCLUDE).dump(involve_engineer)
     year_month = request.args.get('year_month', int_year_month(get_today()))
-    involve_work_report = WorkReport.query.filter_by(year_month=year_month,
-                                                     career_id=involve_engineer.now_career_id).first()
+    involve_work_report = WorkReport.query.filter_by(year_month=year_month, career_id=involve_engineer.now_career_id).first()
     involve_career_info = CareerInfoSchema(many=False, unknown=EXCLUDE).dump(involve_engineer.now_career)
 
     if involve_work_report is None and involve_engineer.now_career is None:  # 人员已出项，可查询历史记录
